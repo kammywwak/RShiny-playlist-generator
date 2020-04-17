@@ -5,6 +5,7 @@ library(devtools)
 # install_github("tiagomendesdantas/Rspotify")
 library(Rspotify)
 
+
 # --- Spotify API Keys ---
 
 keys <- spotifyOAuth(app_id = 'playlist-generator-test',
@@ -27,7 +28,8 @@ compile_recommendations <- function(artist_id = NULL, genre_name = NULL){
   get_recommendations(seed_artists = artist_id,
                       seed_genres = genre_name,
                       limit = desired_track_count, 
-                      authorization = get_spotify_access_token())  
+                      authorization = get_spotify_access_token(client_id = Sys.getenv("SPOTIFY_CLIENT_ID"),
+                                                               client_secret = Sys.getenv("SPOTIFY_CLIENT_SECRET")))  
 }
 
 extract_artist_name <- function(artist_df){
