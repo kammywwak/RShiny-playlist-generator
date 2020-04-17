@@ -6,8 +6,9 @@ library(devtools)
 library(Rspotify)
 
 # --- Spotify API Keys ---
+
 keys <- spotifyOAuth(app_id = 'playlist-generator-test',
-                     client_id = Sys.getenv("SPOTIFY_CLIENT_ID"), 
+                     client_id = Sys.getenv("SPOTIFY_CLIENT_ID"),
                      client_secret = Sys.getenv("SPOTIFY_CLIENT_SECRET"))
 
 # ---- Define Functions ---- 
@@ -135,4 +136,3 @@ gen_rec <- function(artist_string = NULL, genre_string = NULL, desired_listening
 
 
 
-# ---- Test ----

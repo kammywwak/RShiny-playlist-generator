@@ -1,3 +1,7 @@
+library(shiny)
+library(shinydashboard)
+library(DT)
+
 shinyUI(
   dashboardPage(
     dashboardHeader(title = "Playlist Generator"),

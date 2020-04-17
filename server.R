@@ -1,3 +1,15 @@
+library(tidyverse)
+library(spotifyr)
+library(httpuv)
+library(shiny)
+library(shinydashboard)
+library(DT)
+library(devtools)
+# install_github("tiagomendesdantas/Rspotify")
+library(Rspotify)
+
+source('data/get_recommendations.r')
+
 shinyServer(
   function(input, output) { 
     
