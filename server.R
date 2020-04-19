@@ -15,9 +15,13 @@ shinyServer(
     
     # Generate playlist as a reactive conductor
     # https://shiny.rstudio.com/articles/reactivity-overview.html
-    playlist <- reactive({ gen_rec(artist_string = input$artist_search_string, 
-                                   genre_string = input$genre_search_string, 
-                                   desired_listening_minutes = input$minutes)[[1]] })
+    playlist <- reactive({ 
+      gen_rec(artist_string = input$artist_search_string, 
+              genre_string = input$genre_search_string, 
+              desired_listening_minutes = input$minutes,
+              min_date = "1000",
+              max_date = "3000")[[1]]
+    })
     
     output$trace_table <- renderDataTable({
       
