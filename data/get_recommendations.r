@@ -42,8 +42,11 @@ extract_artist_name <- function(artist_df){
   
 }
 
-gen_rec <- function(artist_string = NULL, genre_string = NULL, desired_listening_minutes = 120){
-  
+gen_rec <- function(artist_string = NULL, 
+                    genre_string = NULL, 
+                    desired_listening_minutes = 120,
+                    min_date = "1000",
+                    max_date = "3000"){
   if(!is.null(artist_string))
     
   {
@@ -51,6 +54,8 @@ gen_rec <- function(artist_string = NULL, genre_string = NULL, desired_listening
     artist_input <- str_split(artist_string, "\\|") %>% unlist() 
     
     n_rerun <- ceiling(desired_listening_minutes/(300*length(artist_input)))
+    
+    # print(n_rerun)
     
     seed_artists <- lapply(X = artist_input, FUN = SearchArtist) %>% 
       bind_rows()
@@ -119,7 +124,20 @@ gen_rec <- function(artist_string = NULL, genre_string = NULL, desired_listening
   
   rows <- sample(nrow(deduped_rec))
   
+  # View(deduped_rec[rows,] %>% distinct(album.release_date))
+  
   shuffled_rec <- deduped_rec[rows,] %>%
+    mutate(
+      album.release_date = case_when(
+        
+        album.release_date %>% str_length() == 4 ~ paste0(album.release_date, "-01-01") %>% lubridate::ymd(),
+        album.release_date %>% str_length() == 7 ~ paste0(album.release_date, "-01") %>% lubridate::ymd(),
+        TRUE ~ album.release_date %>% lubridate::ymd()
+      )
+    ) %>% 
+    # filter to desired period
+    filter(album.release_date >= min_date %>% paste0("-01-01") %>% lubridate::ymd(),
+           album.release_date <= max_date %>% paste0("-01-01") %>% lubridate::ymd()) %>% 
     # calculate cumulative listening time
     mutate(cumulative_minutes = cumsum(duration_ms/60000)) %>%
     # filter to the desired total listening time
@@ -128,11 +146,7 @@ gen_rec <- function(artist_string = NULL, genre_string = NULL, desired_listening
            album.release_date, appearances, popularity, external_ids.isrc,
            everything())
   
-  
-  missing_hits <- hits %>%
-    anti_join(shuffled_rec)
-  
-  list(shuffled_rec, missing_hits)
+  list(shuffled_rec, hits)
   
 }
 
