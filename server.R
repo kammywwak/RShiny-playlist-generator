@@ -19,8 +19,8 @@ shinyServer(
       gen_rec(artist_string = input$artist_search_string, 
               genre_string = input$genre_search_string, 
               desired_listening_minutes = input$minutes,
-              min_date = "1000",
-              max_date = "3000")[[1]]
+              min_date = input$min_year,
+              max_date = input$max_year)[[1]]
     })
     
     output$trace_table <- renderDataTable({
@@ -45,10 +45,13 @@ shinyServer(
     
     output$total_listening_time <- renderValueBox({
       valueBox(
-        formatC(playlist() %>%
-                  summarise(sum(duration_ms)/60000)
-                , format="d", big.mark=',') %>% paste("Minutes"),
-        'Total Listening Time',
+        # str_match(format((playlist() %>% summarise(sum(duration_ms)/1000) %>% first()) + as.POSIXct(Sys.Date()), "%M:%S"), '(.*):.*')[,2] %>% 
+        #   paste("Minutes") %>% 
+        #   paste("&") %>%
+        #   paste("\n", str_match(format((playlist() %>% summarise(sum(duration_ms)/1000) %>% first()) + as.POSIXct(Sys.Date()), "%M:%S"), '.*:(.*)')[,2]) %>% 
+        #   paste("Seconds"),
+        format((playlist() %>% summarise(sum(duration_ms)/1000) %>% first()) + as.POSIXct(Sys.Date()), "%M:%S"),
+        'Total Listening Time (MM:SS)',
         # ,icon = icon("stats",lib='glyphicon')
         color = "yellow")
     })

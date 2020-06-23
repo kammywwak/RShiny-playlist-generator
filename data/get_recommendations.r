@@ -45,8 +45,8 @@ extract_artist_name <- function(artist_df){
 gen_rec <- function(artist_string = NULL, 
                     genre_string = NULL, 
                     desired_listening_minutes = 120,
-                    min_date = "1000",
-                    max_date = "3000"){
+                    min_date = "",
+                    max_date = ""){
   if(!is.null(artist_string))
     
   {
@@ -126,12 +126,22 @@ gen_rec <- function(artist_string = NULL,
   
   # View(deduped_rec[rows,] %>% distinct(album.release_date))
   
+  if(min_date == ""){
+    
+    min_date = 1000
+  }
+  
+  if(max_date == ""){
+    
+    max_date = 3000
+    
+  }
+  
   shuffled_rec <- deduped_rec[rows,] %>%
     mutate(
       album.release_date = case_when(
-        
-        album.release_date %>% str_length() == 4 ~ paste0(album.release_date, "-01-01") %>% lubridate::ymd(),
-        album.release_date %>% str_length() == 7 ~ paste0(album.release_date, "-01") %>% lubridate::ymd(),
+      album.release_date %>% str_length() == 4 ~ paste0(album.release_date, "-01-01") %>% lubridate::ymd(),
+      album.release_date %>% str_length() == 7 ~ paste0(album.release_date, "-01") %>% lubridate::ymd(),
         TRUE ~ album.release_date %>% lubridate::ymd()
       )
     ) %>% 
@@ -143,8 +153,9 @@ gen_rec <- function(artist_string = NULL,
     # filter to the desired total listening time
     filter(cumulative_minutes <= desired_listening_minutes) %>%
     select(artist_name, name, album.name,
-           album.release_date, appearances, popularity, external_ids.isrc,
-           everything())
+           album.release_date, popularity, external_ids.isrc,
+           everything()) %>% 
+    select(-c(is_local, type))
   
   list(shuffled_rec, hits)
   
