@@ -2,7 +2,6 @@ library(tidyverse)
 library(spotifyr)
 library(httpuv)
 library(devtools)
-# install_github("tiagomendesdantas/Rspotify")
 library(Rspotify)
 
 
@@ -55,16 +54,12 @@ gen_rec <- function(artist_string = NULL,
     
     n_rerun <- ceiling(desired_listening_minutes/(300*length(artist_input)))
     
-    # print(n_rerun)
-    
     seed_artists <- lapply(X = artist_input, FUN = SearchArtist) %>% 
       bind_rows()
     
-    seed_artist_id <- seed_artists$id %>% rep(n_rerun )
+    seed_artist_id <- seed_artists$id %>% rep(n_rerun)
     
-    genre_input <- str_split(genre_string, "\\|") %>% 
-      unlist() %>% 
-      list() %>% 
+    genre_input <- genre_string %>% list() %>% 
       rep(seed_artist_id %>% length())
     
     rec_df <- mapply(FUN=compile_recommendations,
@@ -73,10 +68,14 @@ gen_rec <- function(artist_string = NULL,
                      SIMPLIFY = F) %>%
       bind_rows() %>%
       select(artists, duration_ms, explicit,
-             is_local, name, external_ids.isrc, popularity, track_number,
+             is_local, name, external_ids.isrc, external_urls.spotify,
+             popularity, track_number,
              type, uri, album.name,
              album.id, album.release_date,
              album.uri)
+    
+    print(seed_artist_id)
+    print(genre_input)
     
   }
   
@@ -97,10 +96,14 @@ gen_rec <- function(artist_string = NULL,
                      SIMPLIFY = F) %>%
       bind_rows() %>%
       select(artists, duration_ms, explicit,
-             is_local, name, external_ids.isrc, popularity, track_number,
+             is_local, name, external_ids.isrc, external_urls.spotify, 
+             popularity, track_number,
              type, uri, album.name,
              album.id, album.release_date,
              album.uri)
+    
+    print(dummy_artist_input)
+    print(genre_input)
   }
   
   artists <- lapply(FUN = extract_artist_name, X = rec_df$artists) %>%
@@ -115,7 +118,7 @@ gen_rec <- function(artist_string = NULL,
     rename(appearances = n) %>%
     distinct()
   
-  # keep tracks with more than 1 appearances
+  # keep a record of tracks with more than 1 appearances
   hits <- deduped_rec %>%
     filter(appearances > 1)
   
@@ -123,8 +126,6 @@ gen_rec <- function(artist_string = NULL,
   set.seed(2020)
   
   rows <- sample(nrow(deduped_rec))
-  
-  # View(deduped_rec[rows,] %>% distinct(album.release_date))
   
   if(min_date == ""){
     
@@ -151,13 +152,16 @@ gen_rec <- function(artist_string = NULL,
     # calculate cumulative listening time
     mutate(cumulative_minutes = cumsum(duration_ms/60000)) %>%
     # filter to the desired total listening time
-    filter(cumulative_minutes <= desired_listening_minutes) %>%
+    filter(cumulative_minutes <= desired_listening_minutes + 1) %>%
     select(artist_name, name, album.name,
            album.release_date, popularity, external_ids.isrc,
            everything()) %>% 
     select(-c(is_local, type))
   
+  print(shuffled_rec %>% summarise(max(cumulative_minutes)) %>% first())
+  
   list(shuffled_rec, hits)
+  
   
 }
 

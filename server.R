@@ -5,8 +5,8 @@ library(shiny)
 library(shinydashboard)
 library(DT)
 library(devtools)
-# install_github("tiagomendesdantas/Rspotify")
 library(Rspotify)
+library(shinyWidgets)
 
 source('data/get_recommendations.r')
 
@@ -15,12 +15,15 @@ shinyServer(
     
     # Generate playlist as a reactive conductor
     # https://shiny.rstudio.com/articles/reactivity-overview.html
-    playlist <- reactive({ 
-      gen_rec(artist_string = input$artist_search_string, 
-              genre_string = input$genre_search_string, 
+    playlist <- reactive({
+      
+      gen_rec(artist_string = input$artist_search_string,
+              genre_string = input$genre_drop_down,
               desired_listening_minutes = input$minutes,
               min_date = input$min_year,
-              max_date = input$max_year)[[1]]
+              max_date = input$max_year)[[1]] %>%
+        # create hyperlinks
+        mutate(external_urls.spotify = paste0("<a href='", external_urls.spotify,"' target='_blank'>", external_urls.spotify,"</a>"))
     })
     
     output$trace_table <- renderDataTable({
@@ -29,7 +32,9 @@ shinyServer(
         
         playlist()
         
-      })
+      },
+      
+      escape = FALSE)
       
     })
     
@@ -39,20 +44,13 @@ shinyServer(
       valueBox(
         playlist() %>% nrow() %>% paste("Tracks"),
         'Total Number of Tracks',
-        # ,icon = icon("stats",lib='glyphicon')
         color = "green")
     })
     
     output$total_listening_time <- renderValueBox({
       valueBox(
-        # str_match(format((playlist() %>% summarise(sum(duration_ms)/1000) %>% first()) + as.POSIXct(Sys.Date()), "%M:%S"), '(.*):.*')[,2] %>% 
-        #   paste("Minutes") %>% 
-        #   paste("&") %>%
-        #   paste("\n", str_match(format((playlist() %>% summarise(sum(duration_ms)/1000) %>% first()) + as.POSIXct(Sys.Date()), "%M:%S"), '.*:(.*)')[,2]) %>% 
-        #   paste("Seconds"),
-        format((playlist() %>% summarise(sum(duration_ms)/1000) %>% first()) + as.POSIXct(Sys.Date()), "%M:%S"),
-        'Total Listening Time (MM:SS)',
-        # ,icon = icon("stats",lib='glyphicon')
+        prettyunits::pretty_ms(playlist() %>% summarise(sum(duration_ms)) %>% first()),
+        'Total Listening Time',
         color = "yellow")
     })
     
