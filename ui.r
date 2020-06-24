@@ -143,7 +143,7 @@ shinyUI(
       # Genre inputs
       , shinyWidgets::pickerInput(
         inputId = "genre_drop_down",
-        label = "Genre(s)",
+        label = h3("Genre(s)"),
         choices = genre,
         selected = "house",
         options = list(`actions-box` = TRUE),
